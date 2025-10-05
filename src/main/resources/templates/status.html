@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${applicationName} + ' - 服务状态'">服务状态</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .tools-section {
+            grid-column: 1 / -1;
+        }
+        h2 {
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .info-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .info-value {
+            color: #2d3748;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .tool-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tool-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .tool-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            word-break: break-all;
+        }
+        .system-info {
+            background-color: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #718096;
+            font-size: 14px;
+        }
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 th:text="${applicationName} + ' - 服务状态'">服务状态</h1>
+    </header>
+
+    <div class="container">
+        <div class="info-card">
+            <h2>应用程序信息</h2>
+            <div class="info-item">
+                <span class="info-label">应用名称:</span>
+                <span class="info-value" th:text="${applicationName}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">服务器端口:</span>
+                <span class="info-value" th:text="${serverPort}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">当前时间:</span>
+                <span class="info-value" th:text="${currentTime}"></span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h2>MCP服务器信息</h2>
+            <div class="info-item">
+                <span class="info-label">服务器名称:</span>
+                <span class="info-value" th:text="${mcpServerName}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">服务器版本:</span>
+                <span class="info-value" th:text="${mcpServerVersion}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">通信协议:</span>
+                <span class="info-value" th:text="${mcpServerProtocol}"></span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h2>系统环境信息</h2>
+            <div class="info-item">
+                <span class="info-label">Java版本:</span>
+                <span class="info-value" th:text="${javaVersion}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">操作系统:</span>
+                <span class="info-value" th:text="${osName}"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">系统版本:</span>
+                <span class="info-value" th:text="${osVersion}"></span>
+            </div>
+        </div>
+
+        <div class="tools-section">
+            <h2>MCP工具列表 [<span th:text="${toolCount}"></span>]</h2>
+            
+            <!-- 工具列表表格 -->
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background-color: #f7fafc;">
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">工具名称</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">工具描述</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">参数描述</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">参数值</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tool : ${tools}" style="border-bottom: 1px solid #e2e8f0;" th:style="${toolStat.odd} ? 'background-color: #fafafa;' : ''">
+                            <td style="padding: 12px;"><span class="tool-name" th:text="${tool.name}"></span></td>
+                            <td style="padding: 12px;" th:text="${tool.description}"></td>
+                            <td style="padding: 12px;">
+                                <div th:if="${tool.paramDetails != null and not tool.paramDetails.isEmpty()}">
+                                    <div th:each="paramInfo : ${tool.paramDetails}" style="margin-bottom: 5px;">
+                                        <span style="font-weight: 500;" th:text="${paramInfo.name}"></span>: 
+                                        <span th:text="${paramInfo.type}"></span> - 
+                                        <span th:text="${paramInfo.description}"></span>
+                                    </div>
+                                </div>
+                                <div th:unless="${tool.paramDetails != null and not tool.paramDetails.isEmpty()}">无参数</div>
+                            </td>
+                            <td style="padding: 12px;">
+                                <div th:if="${tool.paramDetails != null and not tool.paramDetails.isEmpty()}">
+                                    <div th:each="paramInfo : ${tool.paramDetails}" style="margin-bottom: 5px;">
+                                        <input 
+                                            th:attr="
+                                                data-tool-name=${tool.name},
+                                                data-param-name=${paramInfo.name},
+                                                placeholder='请输入' + ${paramInfo.name} + '的值'
+                                            "
+                                            th:class="'tool-param-input'"
+                                            style="
+                                                width: 100%;
+                                                padding: 4px 8px;
+                                                border: 1px solid #cbd5e0;
+                                                border-radius: 4px;
+                                                font-size: 14px;
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                                <div th:unless="${tool.paramDetails != null and not tool.paramDetails.isEmpty()}">-</div>
+                            </td>
+                            <td style="padding: 12px;">
+                                <button 
+                                    th:attr="data-tool-name=${tool.name}"
+                                    class="test-tool-btn"
+                                    style="
+                                        background-color: #667eea;
+                                        color: white;
+                                        border: none;
+                                        border-radius: 4px;
+                                        padding: 6px 12px;
+                                        cursor: pointer;
+                                        font-size: 14px;
+                                    "
+                                    onmouseover="this.style.backgroundColor='#5a67d8'"
+                                    onmouseout="this.style.backgroundColor='#667eea'"
+                                >
+                                    测试
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${tools == null or tools.isEmpty()}">
+                            <td colspan="4" style="padding: 20px; text-align: center; color: #718096;">
+                                <p>未找到MCP工具</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 测试连接结果弹窗 -->
+        <div id="connection-result-modal" 
+            style="
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            "
+        >
+            <div style="
+                background-color: white;
+                border-radius: 8px;
+                padding: 20px;
+                width: 90%;
+                max-width: 500px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            ">
+                <h3 id="modal-title" style="margin-top: 0; color: #4a5568;">连接测试结果</h3>
+                <div id="modal-content" style="margin: 15px 0;"></div>
+                <button id="modal-close" 
+                    style="
+                        background-color: #667eea;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        padding: 8px 16px;
+                        cursor: pointer;
+                        width: 100%;
+                    "
+                >
+                    关闭
+                </button>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+        /*<![CDATA[*/
+        // 格式化消息中的JSON数据
+        function formatJsonMessage(message) {
+            try {
+                // 检查整个消息是否是JSON字符串
+                try {
+                    const jsonObj = JSON.parse(message);
+                    return formatJson(jsonObj);
+                } catch (e) {
+                    // 整个消息不是JSON，尝试使用更简单的方式处理
+                    // 寻找可能的JSON部分开始和结束位置
+                    const openBrace = message.indexOf('{');
+                    const closeBrace = message.lastIndexOf('}');
+                    const openBracket = message.indexOf('[');
+                    const closeBracket = message.lastIndexOf(']');
+                    
+                    // 优先检查对象形式的JSON
+                    if (openBrace !== -1 && closeBrace !== -1 && openBrace < closeBrace) {
+                        const potentialJson = message.substring(openBrace, closeBrace + 1);
+                        try {
+                            const jsonObj = JSON.parse(potentialJson);
+                            const formattedJson = formatJson(jsonObj);
+                            return message.substring(0, openBrace) + formattedJson + message.substring(closeBrace + 1);
+                        } catch (e2) {
+                            // 尝试数组形式的JSON
+                            if (openBracket !== -1 && closeBracket !== -1 && openBracket < closeBracket) {
+                                const potentialJson = message.substring(openBracket, closeBracket + 1);
+                                try {
+                                    const jsonObj = JSON.parse(potentialJson);
+                                    const formattedJson = formatJson(jsonObj);
+                                    return message.substring(0, openBracket) + formattedJson + message.substring(closeBracket + 1);
+                                } catch (e3) {
+                                    // 无法解析为JSON，返回原始消息
+                                    return message;
+                                }
+                            }
+                            return message;
+                        }
+                    } 
+                    // 尝试数组形式的JSON
+                    else if (openBracket !== -1 && closeBracket !== -1 && openBracket < closeBracket) {
+                        const potentialJson = message.substring(openBracket, closeBracket + 1);
+                        try {
+                            const jsonObj = JSON.parse(potentialJson);
+                            const formattedJson = formatJson(jsonObj);
+                            return message.substring(0, openBracket) + formattedJson + message.substring(closeBracket + 1);
+                        } catch (e2) {
+                            // 无法解析为JSON，返回原始消息
+                            return message;
+                        }
+                    }
+                    // 没有找到JSON部分，返回原始消息
+                    return message;
+                }
+            } catch (e) {
+                console.error('格式化JSON失败:', e);
+                return message;
+            }
+        }
+        
+        // 格式化JSON对象为美观的HTML
+        function formatJson(obj) {
+            // 将JSON转换为格式化的字符串
+            const formattedStr = JSON.stringify(obj, null, 2);
+            
+            // 添加样式，将JSON以代码块形式显示
+            return '<pre style="background-color: #f7fafc; padding: 10px; border-radius: 4px; overflow-x: auto; font-family: \'Consolas\', \'Monaco\', \'Courier New\', monospace; font-size: 13px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">' + formattedStr + '</pre>';
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('connection-result-modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalClose = document.getElementById('modal-close');
+            
+            // 关闭弹窗
+            modalClose.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // 点击弹窗外部关闭
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // 为所有测试工具按钮添加点击事件
+            document.querySelectorAll('.test-tool-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const toolName = this.getAttribute('data-tool-name');
+                    
+                    // 收集参数值
+                    const formData = new URLSearchParams();
+                    formData.append('toolName', toolName);
+                    
+                    // 找到该工具对应的所有参数输入框
+                    const paramInputs = document.querySelectorAll('.tool-param-input[data-tool-name="' + toolName + '"]');
+                    paramInputs.forEach(input => {
+                        const paramName = input.getAttribute('data-param-name');
+                        const paramValue = input.value.trim();
+                        if (paramValue !== '') {
+                            formData.append(paramName, paramValue);
+                        }
+                    });
+                    
+                    // 显示加载状态
+                    modalContent.innerHTML = '<p style="text-align: center;">正在测试工具...</p>';
+                    modal.style.display = 'flex';
+                    
+                    // 发送POST请求测试工具
+                    fetch('/test-tool-connection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: formData.toString()
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // 显示结果
+                        if (data.success) {
+                            // 尝试格式化message中的JSON数据
+                            let formattedMessage = formatJsonMessage(data.message);
+                            modalContent.innerHTML = '<div style="color: #48bb78; padding: 10px; background-color: #f0fff4; border-radius: 4px;">' + formattedMessage + '</div>';
+                        } else {
+                            // 尝试格式化错误信息中的JSON数据
+                            let formattedMessage = formatJsonMessage(data.message);
+                            modalContent.innerHTML = '<div style="color: #f56565; padding: 10px; background-color: #fff5f5; border-radius: 4px;">' + formattedMessage + '</div>';
+                        }
+                    })
+                    .catch(error => {
+                        modalContent.innerHTML = '<div style="color: #f56565; padding: 10px; background-color: #fff5f5; border-radius: 4px;">测试工具失败：' + error.message + '</div>';
+                    });
+                });
+            });
+        });
+        /*]]>*/
+        </script>
+    </div>
+
+    <div class="footer">
+        <p>© <span th:text="${currentTime.substring(0, 4)}"></span> MCP4Superflow 服务</p>
+    </div>
+</body>
+</html>
