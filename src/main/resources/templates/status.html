@@ -97,6 +97,41 @@
             color: #718096;
             font-size: 14px;
         }
+        
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #718096;
+            transition: all 0.3s ease;
+            outline: none;
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        .tab-button:hover {
+            color: #667eea;
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        .tab-button.active-tab {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab-button.active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #667eea;
+            border-radius: 3px 3px 0 0;
+        }
         @media (max-width: 992px) {
             .container {
                 grid-template-columns: 1fr 1fr;
@@ -169,8 +204,44 @@
         <div class="tools-section">
             <h2>MCP工具列表 [<span th:text="${toolCount}"></span>]</h2>
             
-            <!-- 工具列表表格 -->
-            <div style="overflow-x: auto;">
+            <!-- Provider Tab 导航 -->
+            <div style="margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; position: relative; overflow-x: auto; scrollbar-width: none;">
+                <div style="display: flex; flex-wrap: nowrap;">
+                    <button 
+                        th:each="providerName : ${providerNames}"
+                        th:id="'tab-' + ${providerName}"
+                        th:attr="data-provider=${providerName}"
+                        class="tab-button"
+                        style="
+                            background: none;
+                            border: none;
+                            padding: 12px 24px;
+                            cursor: pointer;
+                            font-size: 16px;
+                            font-weight: 500;
+                            color: #718096;
+                            border-bottom: 3px solid transparent;
+                            transition: all 0.3s ease;
+                            outline: none;
+                            white-space: nowrap;
+                            position: relative;
+                        "
+                        th:style="${providerNames.indexOf(providerName) == 0} ? 'color: #667eea; font-weight: 600;' : ''"
+                        onclick="switchTab(this)"
+                    >
+                        <span th:text="${providerName}"></span>
+                        <span style="margin-left: 8px; background-color: #667eea; color: white; border-radius: 12px; padding: 3px 9px; font-size: 12px; font-weight: normal;"
+                              th:text="${toolsByProvider.get(providerName).size()}">
+                        </span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tab 内容区域 -->
+            <div th:each="providerName : ${providerNames}" 
+                 th:id="'content-' + ${providerName}"
+                 th:style="${providerNames.indexOf(providerName) == 0} ? 'display: block;' : 'display: none;'"
+                 style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                     <thead>
                         <tr style="background-color: #f7fafc;">
@@ -182,7 +253,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="tool : ${tools}" style="border-bottom: 1px solid #e2e8f0;" th:style="${toolStat.odd} ? 'background-color: #fafafa;' : ''">
+                        <tr th:each="tool : ${toolsByProvider.get(providerName)}" style="border-bottom: 1px solid #e2e8f0;" th:style="${toolStat.odd} ? 'background-color: #fafafa;' : ''">
                             <td style="padding: 12px;"><span class="tool-name" th:text="${tool.name}"></span></td>
                             <td style="padding: 12px;" th:text="${tool.description}"></td>
                             <td style="padding: 12px;">
@@ -237,15 +308,49 @@
                                 </button>
                             </td>
                         </tr>
-                        <tr th:if="${tools == null or tools.isEmpty()}">
+                        <tr th:if="${toolsByProvider.get(providerName) == null or toolsByProvider.get(providerName).isEmpty()}">
                             <td colspan="4" style="padding: 20px; text-align: center; color: #718096;">
-                                <p>未找到MCP工具</p>
+                                <p>未找到工具</p>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+        
+        <script>
+        /*<![CDATA[*/
+        // 切换Tab功能
+        function switchTab(button) {
+            // 获取provider名称
+            const providerName = button.getAttribute('data-provider');
+            
+            // 隐藏所有内容区域
+            const allContent = document.querySelectorAll('[id^="content-"]');
+            allContent.forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // 重置所有按钮样式
+            const allButtons = document.querySelectorAll('.tab-button');
+            allButtons.forEach(btn => {
+                btn.style.color = '#718096';
+                btn.style.fontWeight = '500';
+                // 移除伪元素
+                btn.classList.remove('active-tab');
+            });
+            
+            // 显示选中的内容区域
+            const selectedContent = document.getElementById('content-' + providerName);
+            selectedContent.style.display = 'block';
+            
+            // 高亮选中的按钮
+            button.style.color = '#667eea';
+            button.style.fontWeight = '600';
+            button.classList.add('active-tab');
+        }
+        /*]]>*/
+        </script>
         
         <!-- 测试连接结果弹窗 -->
         <div id="connection-result-modal" 

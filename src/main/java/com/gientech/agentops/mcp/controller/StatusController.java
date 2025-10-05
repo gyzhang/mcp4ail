@@ -91,10 +91,31 @@ public class StatusController {
         // 使用反射机制扫描所有带有@McpTool注解的方法
         List<McpToolInfo> toolInfos = scanMcpTools();
         
-        // 设置工具数量和详细信息
+        // 设置工具数量
         model.addAttribute("toolCount", toolInfos.size());
-        model.addAttribute("tools", toolInfos);
-
+        
+        // 按Provider类名对工具进行分组
+        Map<String, List<McpToolInfo>> toolsByProvider = new HashMap<>();
+        List<String> providerNames = new ArrayList<>();
+        
+        for (McpToolInfo toolInfo : toolInfos) {
+            String className = toolInfo.getClassName();
+            // 提取简单类名
+            String simpleClassName = className.substring(className.lastIndexOf('.') + 1);
+            
+            // 按简单类名分组
+            toolsByProvider.computeIfAbsent(simpleClassName, k -> new ArrayList<>()).add(toolInfo);
+            
+            // 记录provider名称（避免重复）
+            if (!providerNames.contains(simpleClassName)) {
+                providerNames.add(simpleClassName);
+            }
+        }
+        
+        // 将分组信息传递给前端
+        model.addAttribute("toolsByProvider", toolsByProvider);
+        model.addAttribute("providerNames", providerNames);
+        
         return "status";
     }
     
