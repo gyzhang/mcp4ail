@@ -227,6 +227,7 @@
                             position: relative;
                         "
                         th:style="${providerNames.indexOf(providerName) == 0} ? 'color: #667eea; font-weight: 600;' : ''"
+                        th:classappend="${providerNames.indexOf(providerName) == 0} ? 'active-tab' : ''"
                         onclick="switchTab(this)"
                     >
                         <span th:text="${providerName}"></span>
